@@ -19,14 +19,15 @@ test_data = [
     }
 ]
 
-# distフォルダ（アップロード用の箱）を作成
-os.makedirs("dist", exist_ok=True)
+# Cloudflareのサブパスルールに従い、distの中に「happy-for-all」フォルダを作成
+target_dir = os.path.join("dist", "happy-for-all")
+os.makedirs(target_dir, exist_ok=True)
 
 # データを data.json として保存
-with open("dist/data.json", "w", encoding="utf-8") as f:
+with open(os.path.join(target_dir, "data.json"), "w", encoding="utf-8") as f:
     json.dump(test_data, f, ensure_ascii=False, indent=2)
 
-# index.html を distフォルダにコピー
-os.system("cp index.html dist/")
+# index.html をターゲットフォルダにコピー
+os.system(f"cp index.html {target_dir}/")
 
-print("✅ ビルド完了！distフォルダに data.json と index.html を用意しました。")
+print("✅ ビルド完了！dist/happy-for-all フォルダにファイルを用意しました。")
