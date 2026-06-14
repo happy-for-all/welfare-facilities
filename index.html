@@ -165,7 +165,8 @@
             document.getElementById('results').innerHTML = "";
 
             if (displayData.length === 0) {
-                document.getElementById('results').innerHTML = `<div style="text-align: center; color: var(--text-sub); padding: 20px;">「${keyword}」に一致する施設は見つかりませんでした。</div>`;
+                document.getElementById('results').innerHTML = `<div style="text-align: center; color: var(--text-sub); padding: 20px;">「${keyword}」に一致する施設は見つかりませんでした。<br>
+            <small>※施設によっては詳細な番地が登録されていない場合があります。市区町村名（例：東大阪市）での検索や、現在地から探すボタンもお試しください。</small></div>`;
                 document.getElementById('moreContainer').style.display = 'none';
             } else {
                 showMore();
