@@ -27,6 +27,6 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        # 👑 ロリポップのFTP構造に合わせたパスを設定しました
-        server-dir: /happy-for-all/
+        # 👑 先頭のスラッシュを完全に外しました。これでログイン直後の位置から探しに行きます
+        server-dir: for-welfare.pray-power-is-god-and-cocoro.com/happy-for-all/
         local-dir: ./dist/
