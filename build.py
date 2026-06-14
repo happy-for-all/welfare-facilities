@@ -114,6 +114,10 @@ def run_build():
         name = safe_get(row, ["事業所の名称", "事業所名称"])
         city = safe_get(row, ["事業所住所（市区町村）", "事業所住所(市区町村)", target_col])
         address_detail = safe_get(row, ["事業所住所（番地以降）", "事業所住所(番地以降)"])
+        # 👑 【アドオン】番地情報の信頼性チェック（汎用版）
+        # 数字を含まない、または極端に短い（2文字以下）場合は、無効な番地データとみなす。
+        if not re.search(r'[0-9０-９]', address_detail) or len(address_detail) <= 2:
+            address_detail = ""
         address = city + address_detail
         
         raw_tel = safe_get(row, ["事業所電話番号", "事業所連絡先", "電話番号"])
