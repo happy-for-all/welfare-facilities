@@ -3,14 +3,14 @@ import json
 import sys
 import zipfile
 import io
+import re
 import pandas as pd
 
 # ==========================================
-# 👑 福祉ポータル: ローカルZIP超高速ビルドエンジン (Ver 1.2.0)
+# 👑 福祉ポータル: ローカルZIP超高速ビルドエンジン (Ver 1.3.0)
 # 開発者: ちゃろ ＆ AIバディ
 # ==========================================
 
-# 👑 容量節約のため、ZIP圧縮されたファイル名を指定（ちゃろ様の素晴らしいアイデア！）
 LOCAL_ZIP = "sfkopendata_202603_33.zip"
 TARGET_SERVICE_NAME = "共同生活援助"
 
@@ -50,92 +50,93 @@ MUNICIPAL_COORDS = {
     "フェイルセーフ大阪府庁": {"lat": 34.6862, "lon": 135.5201}
 }
 
+# 👑 【アドオン】列名の表記揺れ（全角半角の違い）を吸収して安全に取得する関数
+def safe_get(row, possible_keys):
+    for key in possible_keys:
+        if key in row:
+            return str(row[key]).strip()
+    return ""
 
 def run_build():
     print("==========================================")
     print(f"🌸 福祉ポータルデータビルド: 【大阪府・{TARGET_SERVICE_NAME}】")
     print("==========================================")
 
-    # 1. ローカルZIPの存在確認
     if not os.path.exists(LOCAL_ZIP):
         print(f"❌ [致命的エラー] リポジトリ内に『{LOCAL_ZIP}』が見つかりません。")
-        print("💡 手元のCSVをZIP圧縮した『osaka.zip』をGitHubにアップロードしてください。")
         sys.exit(1)
 
-    # 2. ZIPの読み込みとメモリ上での解凍
     print(f"📡 [ZIP解凍] メモリ上で '{LOCAL_ZIP}' を安全に展開中...")
     try:
         zip_file = zipfile.ZipFile(LOCAL_ZIP)
-        # ZIP内から最初に見つかったCSVファイルのファイル名を取得
         csv_filename = [f for f in zip_file.namelist() if f.endswith('.csv')][0]
-        print(f"📦 CSVファイルを発見しました: {csv_filename}")
     except Exception as e:
         print(f"❌ ZIPの解凍またはCSVの特定に失敗しました: {e}")
         sys.exit(1)
 
-    # 3. CSVの読み込み（文字コード自動判別＆BOM回避）
     df = None
     encodings = ["utf-8-sig", "shift_jis", "cp932", "utf-8"]
     for enc in encodings:
         try:
-            print(f"📖 CSVをエンコーディング '{enc}' で読み込んでいます...")
             with zip_file.open(csv_filename) as f:
                 df = pd.read_csv(f, encoding=enc, dtype=str)
             print(f"🟢 '{enc}' での読み込みに成功しました！")
             break
-        except Exception as e:
-            print(f"⚠️ '{enc}' は不適合でした（原因: {e}）")
+        except Exception:
             continue
 
     if df is None:
         print("❌ [致命的エラー] すべての主要文字コードでCSVの読み込みに失敗しました。")
         sys.exit(1)
 
-    print(f"✅ CSVスキャン成功。全 {len(df)} 件のデータを処理します。")
+    # 👑 【外部AI提案のデバッグ機能】GitHub Actionsのログで実際の列名を確認できます
+    print("【列名チェック（実際のCSVヘッダー）】")
+    print(list(df.columns))
 
-    # 4. 大阪府の事業所のみに絞り込み
-    df_filtered = df[df['事業所住所（市区町村）'].str.startswith("大阪府", na=False)].copy()
-    print(f"📊 抽出結果: {len(df_filtered)} 件の大阪府の事業所が見つかりました。")
-
-    if len(df_filtered) == 0:
-        print("❌ [致命的エラー] 大阪府に該当する事業所データが0件です。")
+    # 「事業所住所」の表記揺れに対応する列名リストを用意
+    col_address_city = [col for col in df.columns if "住所" in col and "市区町村" in col]
+    if not col_address_city:
+        print("❌ [致命的エラー] 住所（市区町村）を示す列が見つかりません。列名チェックのログを確認してください。")
         sys.exit(1)
 
-    # 5. データクレンジングと欠損フォールバック
+    target_col = col_address_city[0]
+    df_filtered = df[df[target_col].str.startswith("大阪府", na=False)].copy()
+    print(f"📊 抽出結果: {len(df_filtered)} 件の大阪府の事業所が見つかりました。")
+
     facilities = []
     
     for _, row in df_filtered.iterrows():
-        name = str(row.get("事業所の名称", "")).strip()
-        
-        # 住所の構築
-        city = str(row.get("事業所住所（市区町村）", "")).strip()
-        address_detail = str(row.get("事業所住所（番地以降）", "")).strip()
+        # 表記揺れを吸収してデータを取得
+        name = safe_get(row, ["事業所の名称", "事業所名称"])
+        city = safe_get(row, ["事業所住所（市区町村）", "事業所住所(市区町村)", target_col])
+        address_detail = safe_get(row, ["事業所住所（番地以降）", "事業所住所(番地以降)"])
         address = city + address_detail
         
-        tel = str(row.get("事業所電話番号", "")).strip()
+        raw_tel = safe_get(row, ["事業所電話番号", "事業所連絡先", "電話番号"])
         
-        # 緯度・経度のクレンジング
-        raw_lat = row.get("事業所緯度")
-        raw_lon = row.get("事業所経度")
+        # 👑 【アドオン】電話番号クレンジング（発信できないバグ対策）
+        # 全角数字を半角に直し、数字とハイフン以外（不要な空白など）を削除
+        tel_clean = re.sub(r'[^0-9\-]', '', raw_tel.translate(str.maketrans('０１２３４５６７８９', '0123456789')))
+
+        raw_lat = safe_get(row, ["事業所緯度", "緯度"])
+        raw_lon = safe_get(row, ["事業所経度", "経度"])
         
-        lat = None
-        lon = None
+        lat, lon = None, None
         is_approximate = False
         
         try:
-            if pd.notna(raw_lat) and str(raw_lat).strip() != "":
-                lat = float(raw_lat)
-            if pd.notna(raw_lon) and str(raw_lon).strip() != "":
-                lon = float(raw_lon)
+            if raw_lat: lat = float(raw_lat)
+            if raw_lon: lon = float(raw_lon)
         except Exception:
             pass
             
-        # 👑 【経緯度欠損防衛シールド】
         if lat is None or lon is None:
             is_approximate = True
             detected_city = None
+            # 👑 【アドオン】市区町村の誤判定防止（前方一致等の厳密判定）
             for key in MUNICIPAL_COORDS.keys():
-                if key in city:
+                # "大阪府東大阪市..." の中から "東大阪市" などを正確に探す
+                if key in city and (city.index(key) == 3 or city.index(key) == 0):
                     detected_city = key
                     break
             
@@ -149,13 +150,13 @@ def run_build():
         facilities.append({
             "name": name,
             "address": address,
-            "tel": tel,
+            "tel": raw_tel,        # 画面表示用（そのまま）
+            "tel_clean": tel_clean, # 👑 リンク（発信）用
             "lat": round(lat, 6),
             "lon": round(lon, 6),
             "is_approximate": is_approximate
         })
 
-    # 6. JSONファイルの書き出し
     target_dir = os.path.join("dist", "happy-for-all")
     os.makedirs(target_dir, exist_ok=True)
     
@@ -163,11 +164,8 @@ def run_build():
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(facilities, f, ensure_ascii=False, indent=2)
         
-    # index.html をターゲットフォルダにコピー
     os.system(f"cp index.html {target_dir}/")
-
-    print(f"🎉 [ビルド大成功] 全 {len(facilities)} 件の本番データを格納した '{output_path}' が完成しました！")
-
+    print(f"🎉 [ビルド大成功] '{output_path}' が完成しました！")
 
 if __name__ == "__main__":
     try:
