@@ -3,46 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 👑 テスト中につきGoogle検索に載せない（本番公開時にここを外します） -->
     <meta name="robots" content="noindex, nofollow">
+    
+    <!-- 👑 【防衛シールド1】重複コンテンツペナルティを100%回避するカノニカルタグ -->
+    <link rel="canonical" href="https://for-welfare.pray-power-is-god-and-cocoro.com/happy-for-all/">
+
     <title>【テスト版】全国福祉施設 検索ポータル | HFA</title>
-    <!-- Google tag (gtag.js) GA4 -->
+
+    <!-- 👑 【防衛シールド2】GA4二重計測（データ汚染）を防ぐ、独自ドメイン専用起動スクリプト -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-GZF5D3TRFF"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-GZF5D3TRFF');
+      // 独自ドメイン（for-welfare...）の時だけ、GA4の計測を起動させます
+      if (window.location.hostname.indexOf('workers.dev') === -1) {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-GZF5D3TRFF');
+      }
     </script>
+
     <style>
-        :root { --bg-color: #f4f9f4; --main-green: #5a9e82; --text-main: #333333; --text-sub: #666666; --card-bg: #ffffff; }
-        body { background-color: var(--bg-color); color: var(--text-main); font-family: sans-serif; margin: 0; padding: 0; line-height: 1.6; }
-        .header { background-color: var(--main-green); color: white; text-align: center; padding: 15px 10px; font-weight: bold; font-size: 1.2rem; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px 15px; }
-        .disclaimer { background-color: #fff3cd; color: #856404; padding: 12px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 20px; }
-        .search-box { background: var(--card-bg); padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
-        .btn-gps { background-color: var(--main-green); color: white; border: none; padding: 15px 20px; font-size: 1.1rem; font-weight: bold; border-radius: 30px; width: 100%; cursor: pointer; }
-        .card { background: var(--card-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .card h3 { margin: 0 0 10px 0; font-size: 1.1rem; color: var(--main-green); }
-        .card p { margin: 5px 0; font-size: 0.9rem; }
+        /* 👑 目に優しいセージグリーン＆視認性の高いチャコールグレー（アクセシビリティ考慮） */
+        :root {
+            --bg-color: #f4f9f4; /* 極めて淡いセージグリーン（安心感） */
+            --main-green: #5a9e82; /* 落ち着いたグリーン */
+            --text-main: #333333; /* 疲れにくい濃いグレー */
+            --text-sub: #666666;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .header {
+            background-color: var(--main-green);
+            color: white;
+            text-align: center;
+            padding: 18px 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 15px;
+        }
+        /* 👑 文字サイズはアクセシビリティに配慮して1rem（16px）以上を死守 */
+        .disclaimer {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffeeba;
+            border-right: 1px solid #ffeeba;
+            border-top: 1px solid #ffeeba;
+            border-bottom: 1px solid #ffeeba;
+        }
+        .search-box {
+            background: var(--card-bg);
+            padding: 25px 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+            border: 1px solid var(--border-color);
+        }
+        .btn-gps {
+            background-color: var(--main-green);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 30px; /* 角丸で優しいボタン設計 */
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(90, 158, 130, 0.25);
+            transition: 0.2s;
+        }
+        .btn-gps:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 3px rgba(90, 158, 130, 0.25);
+        }
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border: 1px solid var(--border-color);
+        }
+        .card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.15rem;
+            color: var(--main-green);
+        }
+        .card p {
+            margin: 6px 0;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+        .tel-link {
+            color: var(--main-green);
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            padding: 5px 0;
+        }
+        /* 👑 アドセンス用のコンテナ設計（本番時でもレイアウトが崩れないサイズ固定） */
+        .adsense-container {
+            text-align: center;
+            margin: 35px 0;
+            min-height: 250px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px dashed #cbd5e1;
+        }
+        .donation-box {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            padding: 25px 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 40px;
+        }
+        .donation-title {
+            color: var(--main-green);
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        .donation-text {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            margin-bottom: 20px;
+            text-align: left;
+            line-height: 1.7;
+        }
+        .btn-donation {
+            display: inline-block;
+            background-color: #ff9900; /* Amazon等に馴染む暖色 */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 6px rgba(255, 153, 0, 0.2);
+            transition: 0.2s;
+        }
+        .btn-donation:active {
+            transform: scale(0.98);
+        }
     </style>
 </head>
 <body>
-    <div class="header">🌿 まごころ福祉ポータル（テスト）</div>
+
+    <div class="header">
+        🌿 まごころ福祉施設ナビ（大阪府版）
+    </div>
+
     <div class="container">
-        <div class="disclaimer"><strong>【免責事項】</strong> プログラムで自動処理しているため、誤りがある場合があります。必ず直接お問い合わせください。</div>
-        <div class="search-box">
-            <h2>テスト用データ読み込み</h2>
-            <button class="btn-gps" onclick="loadData()">📁 データを表示する</button>
+        <!-- 👑 免責事項（ユーザーを保護する優しく明確な文言） -->
+        <div class="disclaimer">
+            <strong>【免責事項】</strong><br>
+            当サイトは行政の公開データをプログラムで自動整理して表示しています。正確な情報提供に努めておりますが、データ更新のタイムラグ等で古い情報が残っている場合がございます。施設をご検討の際は、必ず事前に直接施設へお問い合わせ・ご確認ください。
         </div>
-        <div id="results">ここに施設が表示されます。</div>
+
+        <div class="search-box">
+            <h2 style="margin-top: 0; font-size: 1.25rem; line-height: 1.4;">現在地から一番近い<br>「共同生活援助」を探す</h2>
+            <p style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 20px;">※端末の位置情報はサーバーには一切送信・保存されません。</p>
+            <button class="btn-gps" onclick="loadData()">
+                📍 現在地から近い順に探す
+            </button>
+        </div>
+
+        <!-- 👑 結果表示エリア -->
+        <div id="results">
+            <!-- 初期状態の案内表示 -->
+            <div style="text-align: center; color: var(--text-sub); padding: 30px; background: #ffffff; border-radius: 12px; border: 1px solid var(--border-color);">
+                上のボタンを押すと、お近くの施設が順番に表示されます。
+            </div>
+        </div>
+
+        <!-- 👑 【アドオン】Google AdSense 広告ユニット（テスト中はコメントアウト、本番化時にコメントを解除） -->
+        <div class="adsense-container">
+            <!-- 広告タグをここに挿入 
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2908004621823900" crossorigin="anonymous"></script>
+            <ins class="adsbygoogle"
+                 style="display:inline-block;width:300px;height:250px"
+                 data-ad-client="ca-pub-2908004621823900"
+                 data-ad-slot="3799886389"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+            -->
+            <span style="color: var(--text-sub); font-size: 0.8rem;">（ここに広告が表示されます）</span>
+        </div>
+
+        <!-- 👑 寄付（開発者支援）セクション -->
+        <div class="donation-box">
+            <div class="donation-title">☕ 運営へのあたたかいご支援</div>
+            <div class="donation-text">
+                このサイトが少しでもお役に立てたなら、運営継続のためにご支援（コーヒー1杯分でも）をいただけると非常に励みになります。いただいたご支援は、サイトの安定した運営継続と、運営者自身の生活費、そしてゆくゆくは福祉活動への思いに使わせていただきます。
+            </div>
+            <!-- 例としてAmazonギフトのボタン（後で正式なリンクを設定します） -->
+            <a href="#" class="btn-donation">
+                🎁 開発者を支援する（Amazonギフト等）
+            </a>
+        </div>
     </div>
 
     <script>
         async function loadData() {
             const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = "読み込み中...";
+            resultsDiv.innerHTML = `
+                <div style="text-align: center; padding: 30px; color: var(--text-sub);">
+                    ⏳ データを読み込んでいます...
+                </div>`;
             try {
-                // 自動生成されたJSONファイルを読み込む
+                // 自動生成されたJSONファイルを読み込む（PHP中継を通過します）
                 const response = await fetch('./data.json');
                 const data = await response.json();
                 
@@ -53,12 +245,15 @@
                     card.innerHTML = `
                         <h3>🏠 ${item.name}</h3>
                         <p>📍 ${item.address}</p>
-                        <p>📞 <a href="tel:${item.tel}">${item.tel}</a></p>
+                        <p>📞 電話: <a href="tel:${item.tel}" class="tel-link">${item.tel}</a></p>
                     `;
                     resultsDiv.appendChild(card);
                 });
             } catch (error) {
-                resultsDiv.innerHTML = "データの読み込みに失敗しました。";
+                resultsDiv.innerHTML = `
+                    <div style="text-align: center; padding: 30px; color: #dc2626;">
+                        ❌ データの読み込みに失敗しました。時間をおいて再度お試しください。
+                    </div>`;
             }
         }
     </script>
