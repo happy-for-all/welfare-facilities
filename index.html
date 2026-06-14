@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- 👑 テスト中につきGoogle検索に載せない（本番時に外します） -->
     <meta name="robots" content="noindex, nofollow">
     <link rel="canonical" href="https://for-welfare.pray-power-is-god-and-cocoro.com/happy-for-all/">
     <title>【テスト版】全国福祉施設 検索ポータル | HFA</title>
@@ -34,7 +33,6 @@
         
         .search-box { background: var(--card-bg); padding: 25px 20px; border-radius: 12px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.03); border: 1px solid var(--border-color); }
         
-        /* 👑 フリーワード検索用の入力欄 */
         .search-input { width: 100%; padding: 12px; font-size: 1rem; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; margin-bottom: 15px; }
         .btn-search { background-color: #4b5563; color: white; border: none; padding: 12px 20px; font-size: 1rem; font-weight: bold; border-radius: 8px; width: 100%; cursor: pointer; margin-bottom: 25px; transition: 0.2s; }
         
@@ -47,11 +45,14 @@
         .tel-link { color: var(--main-green); font-weight: bold; text-decoration: none; display: inline-block; padding: 5px 0; }
         
         .distance-badge { display: inline-block; background-color: #e2e8f0; color: #475569; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; }
-        .approx-note { font-size: 0.75rem; color: #dc2626; margin-top: 4px; }
+        .approx-note { font-size: 0.75rem; color: #dc2626; margin-top: 4px; display: block; }
         
-        /* 👑 もっと見るボタン */
         .btn-more { background-color: #ffffff; color: var(--main-green); border: 2px solid var(--main-green); padding: 12px 20px; font-size: 1rem; font-weight: bold; border-radius: 30px; width: 100%; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn-more:active { transform: scale(0.98); }
         
+        .btn-top { position: fixed; bottom: 20px; right: 20px; background-color: var(--main-green); color: white; width: 50px; height: 50px; border-radius: 50%; border: none; font-size: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 1000; transition: opacity 0.3s; }
+        .btn-top:active { transform: scale(0.95); }
+
         .adsense-container { text-align: center; margin: 35px 0; min-height: 250px; background-color: rgba(255, 255, 255, 0.5); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px dashed #cbd5e1; }
         .donation-box { background-color: #ffffff; border: 1px solid var(--border-color); padding: 25px 20px; border-radius: 12px; text-align: center; margin-top: 40px; }
         .donation-title { color: var(--main-green); font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; }
@@ -74,15 +75,14 @@
             <p style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 20px;">※端末の位置情報はサーバーには一切送信されません。</p>
             <button class="btn-gps" onclick="sortByGPS()">📍 現在地から近い順に探す</button>
 
-            <!-- 👑 住所・フリーワード検索エリア（保険機能） -->
             <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 25px 0;">
-            <h3 style="font-size: 1rem; color: var(--text-main); margin-top: 0;">または、住所・地域名で絞り込む</h3>
+            <h3 style="font-size: 1rem; color: var(--text-main); margin-top: 0;">または、住所・施設名で絞り込む</h3>
             <input type="text" id="searchInput" class="search-input" placeholder="例：東大阪市小阪" onkeypress="handleEnter(event)">
             <button class="btn-search" onclick="searchByKeyword()">🔍 検索する</button>
         </div>
 
         <div id="results"></div>
-        <!-- 👑 もっと見るボタンの配置場所 -->
+        
         <div id="moreContainer" style="text-align: center; display: none;">
             <button class="btn-more" onclick="showMore()">もっと見る ＋</button>
         </div>
@@ -100,48 +100,46 @@
         </div>
     </div>
 
-    <script>
-        let allData = [];       // ダウンロードした全データ
-        let displayData = [];   // 検索・ソート結果のデータ
-        let currentIndex = 0;   // 現在表示している件数
-        const ITEMS_PER_PAGE = 10; // 1回に表示する件数
+    <button id="btnTop" class="btn-top" onclick="scrollToTop()">↑</button>
 
-        // 👑 初期ロード：裏側でJSONデータだけを読み込んでおく
+    <script>
+        let allData = [];
+        let displayData = [];
+        let currentIndex = 0;
+        const ITEMS_PER_PAGE = 10;
+
         window.onload = async () => {
             try {
                 const response = await fetch('./data.json');
                 allData = await response.json();
-                document.getElementById('results').innerHTML = `<div style="text-align: center; color: var(--text-sub);">準備完了です。上のボタンから探してください。</div>`;
+                document.getElementById('results').innerHTML = `<div style="text-align: center; color: var(--text-sub); padding: 20px; background: white; border-radius: 8px;">準備完了です。上のボタンから探してください。</div>`;
             } catch (error) {
                 document.getElementById('results').innerHTML = `<div style="text-align: center; color: #dc2626;">データの読み込みに失敗しました。</div>`;
             }
         };
 
-        // 👑 GPSソート機能（ハーバーサイン公式で距離計算）
         function sortByGPS() {
             if (!navigator.geolocation) {
                 alert("お使いの端末はGPS機能に対応していません。下の検索窓をご利用ください。");
                 return;
             }
-            document.getElementById('results').innerHTML = `<div style="text-align: center; color: var(--text-sub);">📍 現在地を取得・計算中...</div>`;
+            document.getElementById('results').innerHTML = `<div style="text-align: center; color: var(--text-sub); padding: 20px;">📍 現在地を取得・計算中...</div>`;
             document.getElementById('moreContainer').style.display = 'none';
 
             navigator.geolocation.getCurrentPosition(position => {
                 const userLat = position.coords.latitude;
                 const userLon = position.coords.longitude;
 
-                // 距離を計算してデータに付与
                 displayData = allData.map(item => {
                     const dist = calculateDistance(userLat, userLon, item.lat, item.lon);
                     return { ...item, distance: dist };
                 });
 
-                // 距離が近い順に並び替え
                 displayData.sort((a, b) => a.distance - b.distance);
                 
                 currentIndex = 0;
                 document.getElementById('results').innerHTML = "";
-                showMore(); // 最初の10件を表示
+                showMore();
 
             }, error => {
                 alert("位置情報が取得できませんでした。スマホの設定で許可するか、検索窓をご利用ください。");
@@ -149,7 +147,6 @@
             });
         }
 
-        // 👑 フリーワード検索機能（住所・名前で絞り込み）
         function searchByKeyword() {
             const keyword = document.getElementById('searchInput').value.trim();
             if (!keyword) {
@@ -157,30 +154,27 @@
                 return;
             }
             
-            // 距離データ（distance）をリセットし、キーワードが含まれるものを抽出
             displayData = allData.filter(item => {
                 return item.address.includes(keyword) || item.name.includes(keyword);
             }).map(item => {
-                return { ...item, distance: null }; // 距離は計算しないのでnull
+                return { ...item, distance: null };
             });
 
             currentIndex = 0;
             document.getElementById('results').innerHTML = "";
 
             if (displayData.length === 0) {
-                document.getElementById('results').innerHTML = `<div style="text-align: center; color: var(--text-sub);">「${keyword}」に一致する施設は見つかりませんでした。</div>`;
+                document.getElementById('results').innerHTML = `<div style="text-align: center; color: var(--text-sub); padding: 20px;">「${keyword}」に一致する施設は見つかりませんでした。</div>`;
                 document.getElementById('moreContainer').style.display = 'none';
             } else {
                 showMore();
             }
         }
 
-        // Enterキーで検索実行
         function handleEnter(e) {
             if (e.key === 'Enter') searchByKeyword();
         }
 
-        // 👑 10件ずつ表示する「もっと見る」機能
         function showMore() {
             const resultsDiv = document.getElementById('results');
             const limit = Math.min(currentIndex + ITEMS_PER_PAGE, displayData.length);
@@ -190,27 +184,26 @@
                 const card = document.createElement('div');
                 card.className = "card";
                 
-                // 距離情報があればバッジを作成
                 let distanceHtml = "";
                 if (item.distance !== null) {
                     distanceHtml = `<div class="distance-badge">📍 ここから約 ${item.distance.toFixed(1)} km</div>`;
                     if (item.is_approximate) {
-                        distanceHtml += `<div class="approx-note">※正確な座標がないため市役所等からの目安距離です</div>`;
+                        distanceHtml += `<span class="approx-note">※正確な座標がないため、市役所等からの目安距離です</span>`;
                     }
                 }
 
+                // 👑 【アドオン修正】 item.tel_clean を使って安全に電話発信させます
                 card.innerHTML = `
                     ${distanceHtml}
                     <h3>🏠 ${item.name}</h3>
                     <p>📍 ${item.address}</p>
-                    <p>📞 電話: <a href="tel:${item.tel}" class="tel-link">${item.tel}</a></p>
+                    <p>📞 電話: <a href="tel:${item.tel_clean}" class="tel-link">${item.tel}</a></p>
                 `;
                 resultsDiv.appendChild(card);
             }
 
             currentIndex = limit;
 
-            // 残りがあれば「もっと見る」ボタンを表示、なければ隠す
             if (currentIndex < displayData.length) {
                 document.getElementById('moreContainer').style.display = 'block';
             } else {
@@ -218,9 +211,8 @@
             }
         }
 
-        // 🌎 2点間の距離を求める計算式（ハーバーサイン公式）
         function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; // 地球の半径 (km)
+            const R = 6371; 
             const dLat = (lat2 - lat1) * (Math.PI / 180);
             const dLon = (lon2 - lon1) * (Math.PI / 180);
             const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -228,6 +220,19 @@
                       Math.sin(dLon / 2) * Math.sin(dLon / 2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c;
+        }
+
+        window.onscroll = function() {
+            const btnTop = document.getElementById("btnTop");
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                btnTop.style.display = "flex";
+            } else {
+                btnTop.style.display = "none";
+            }
+        };
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     </script>
 </body>
