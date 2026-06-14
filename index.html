@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 👑 テスト中につきGoogle検索に載せない -->
+    <meta name="robots" content="noindex, nofollow">
+    <title>【テスト版】全国福祉施設 検索ポータル | HFA</title>
+
+    <!-- Google tag (gtag.js) GA4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GZF5D3TRFF"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-GZF5D3TRFF');
+    </script>
+
+    <!-- Google AdSense (本番時にコメントアウト解除)
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2908004621823900" crossorigin="anonymous"></script>
+    -->
+
+    <style>
+        /* 👑 心安らぐセージグリーン＆チャコールグレー設計 */
+        :root {
+            --bg-color: #f4f9f4; /* 優しいオフホワイト・微緑 */
+            --main-green: #5a9e82; /* 落ち着いたセージグリーン */
+            --text-main: #333333; /* 疲れにくいチャコールグレー */
+            --text-sub: #666666;
+            --card-bg: #ffffff;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .header {
+            background-color: var(--main-green);
+            color: white;
+            text-align: center;
+            padding: 15px 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 15px;
+        }
+        .disclaimer {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffeeba;
+        }
+        .search-box {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn-gps {
+            background-color: var(--main-green);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 30px; /* 角丸で優しい印象 */
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(90, 158, 130, 0.3);
+            transition: 0.3s;
+        }
+        .btn-gps:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 3px rgba(90, 158, 130, 0.3);
+        }
+        .donation-box {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 40px;
+        }
+        .donation-title {
+            color: var(--main-green);
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .donation-text {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        🌿 まごころ福祉ポータル（テスト版）
+    </div>
+
+    <div class="container">
+        <!-- 👑 免責事項 -->
+        <div class="disclaimer">
+            <strong>【免責事項】</strong><br>
+            このサイトは、行政の公開データをプログラムで自動整理して表示しています。情報の正確性には努めていますが、万が一誤りがあった場合はごめんなさい。必ずご自身で施設へ直接お問い合わせください。
+        </div>
+
+        <div class="search-box">
+            <h2 style="margin-top: 0; font-size: 1.2rem;">現在地から一番近い<br>「共同生活援助」を探す</h2>
+            <p style="font-size: 0.9rem; color: var(--text-sub);">※位置情報はサーバーに保存されません。</p>
+            <button class="btn-gps" onclick="alert('GPS機能はPhase 2で実装します！')">
+                📍 現在地から探す
+            </button>
+        </div>
+
+        <!-- ここにカードが入る予定地 -->
+        <div id="results" style="text-align: center; color: var(--text-sub); padding: 20px;">
+            ボタンを押すと、近い順に施設が表示されます。
+        </div>
+
+        <!-- 👑 寄付リンク -->
+        <div class="donation-box">
+            <div class="donation-title">☕ 運営へのあたたかいご支援</div>
+            <div class="donation-text">
+                このサイトが少しでもお役に立てたなら、運営継続のためにご支援いただけると嬉しいです（コーヒー1杯分でも大歓迎です）。いただいたご支援は、サイトの運営維持費と、運営者自身、そしてゆくゆくは福祉活動への思いに使わせていただきます。
+            </div>
+            <!-- 例としてAmazonギフトのボタン（後でリンクを差し替えます） -->
+            <a href="#" style="display: inline-block; background-color: #ff9900; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.9rem;">
+                🎁 開発者にコーヒーを贈る
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>
