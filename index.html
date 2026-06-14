@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 👑 テスト中につきGoogle検索に載せない（本番時に外します） -->
     <meta name="robots" content="noindex, nofollow">
     <link rel="canonical" href="https://for-welfare.pray-power-is-god-and-cocoro.com/happy-for-all/">
     <title>【テスト版】全国福祉施設 検索ポータル | HFA</title>
@@ -192,12 +193,19 @@
                     }
                 }
 
-                // 👑 【アドオン修正】 item.tel_clean を使って安全に電話発信させます
+                // 👑 【アドオン】電話番号の有無で表示を切り替える
+                let telHtml = "";
+                if (item.tel_clean && item.tel_clean.length > 0) {
+                    telHtml = `<p>📞 電話: <a href="tel:${item.tel_clean}" class="tel-link">${item.tel}</a></p>`;
+                } else {
+                    telHtml = `<p style="color: var(--text-sub);">📞 電話番号情報なし</p>`;
+                }
+
                 card.innerHTML = `
                     ${distanceHtml}
                     <h3>🏠 ${item.name}</h3>
                     <p>📍 ${item.address}</p>
-                    <p>📞 電話: <a href="tel:${item.tel_clean}" class="tel-link">${item.tel}</a></p>
+                    ${telHtml}
                 `;
                 resultsDiv.appendChild(card);
             }
