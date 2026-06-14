@@ -27,7 +27,6 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        # 👑 注意: レンタルサーバー上の「happy-for-all」フォルダへの正しいパスを指定してください
-        # 例: /home/xxxx/www/for-welfare/happy-for-all/
-        server-dir: /ここを実際のFTPパスに変更してください/
+        # 👑 ロリポップのFTP構造に合わせたパスを設定しました
+        server-dir: /for-welfare.pray-power-is-god-and-cocoro.com/happy-for-all/
         local-dir: ./dist/
