@@ -1,4 +1,4 @@
-name: FTP Auto Deploy
+name: HFA Portal Auto Deploy (CF Version)
 
 on:
   push:
@@ -21,12 +21,7 @@ jobs:
     - name: Run Build Script
       run: python build.py
 
-    - name: FTP Deploy
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-      with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        # 👑 先頭のスラッシュを完全に外しました。これでログイン直後の位置から探しに行きます
-        server-dir: for-welfare.pray-power-is-god-and-cocoro.com/happy-for-all/
-        local-dir: ./dist/
+    - name: Deploy to Cloudflare Workers
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      run: npx wrangler deploy
