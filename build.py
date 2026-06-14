@@ -54,6 +54,9 @@ MUNICIPAL_COORDS = {
 def safe_get(row, possible_keys):
     for key in possible_keys:
         if key in row:
+            value = str(row[key]).strip()
+            # 👑 【アドオン】NaN由来の"nan"文字列を空文字に正規化
+            if value.lower() == "nan":
             return str(row[key]).strip()
     return ""
 
