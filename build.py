@@ -7,8 +7,9 @@ import re
 import pandas as pd
 
 # ==========================================
-# 👑 福祉ポータル: ローカルZIP超高速ビルドエンジン (Ver 1.3.0)
+# 👑 福祉ポータル: ローカルZIP超高速ビルドエンジン (Ver 1.3.1 脆弱性修正版)
 # 開発者: ちゃろ ＆ AIバディ
+# 理念：HFA（Happy for All）
 # ==========================================
 
 LOCAL_ZIP = "sfkopendata_202603_33.zip"
@@ -50,12 +51,10 @@ MUNICIPAL_COORDS = {
     "フェイルセーフ大阪府庁": {"lat": 34.6862, "lon": 135.5201}
 }
 
-# 👑 【アドオン】列名の表記揺れ（全角半角の違い）を吸収して安全に取得する関数
 def safe_get(row, possible_keys):
     for key in possible_keys:
         if key in row:
             value = str(row[key]).strip()
-            # 👑 【アドオン】NaN由来の"nan"文字列を空文字に正規化
             if value.lower() == "nan":
                 return ""
             return value
@@ -93,37 +92,34 @@ def run_build():
         print("❌ [致命的エラー] すべての主要文字コードでCSVの読み込みに失敗しました。")
         sys.exit(1)
 
-    # 👑 【外部AI提案のデバッグ機能】GitHub Actionsのログで実際の列名を確認できます
     print("【列名チェック（実際のCSVヘッダー）】")
     print(list(df.columns))
 
-    # 「事業所住所」の表記揺れに対応する列名リストを用意
-    col_address_city = [col for col in df.columns if "住所" in col and "市区町村" in col]
-    if not col_address_city:
-        print("❌ [致命的エラー] 住所（市区町村）を示す列が見つかりません。列名チェックのログを確認してください。")
+    # 👑 【バグ修正・脆弱性対策】
+    # 法人住所に引っ張られるバグを100%防ぐため、必ず「事業所」の住所列を狙い撃ちでターゲットにします。
+    target_col = "事業所住所（市区町村）"
+    if "事業所住所（市区町村）" not in df.columns and "事業所住所(市区町村)" in df.columns:
+        target_col = "事業所住所(市区町村)"
+
+    if target_col not in df.columns:
+        print("❌ [致命的エラー] 事業所住所（市区町村）列が見つかりません。")
         sys.exit(1)
 
-    target_col = col_address_city[0]
     df_filtered = df[df[target_col].str.startswith("大阪府", na=False)].copy()
     print(f"📊 抽出結果: {len(df_filtered)} 件の大阪府の事業所が見つかりました。")
 
     facilities = []
     
     for _, row in df_filtered.iterrows():
-        # 表記揺れを吸収してデータを取得
         name = safe_get(row, ["事業所の名称", "事業所名称"])
         city = safe_get(row, ["事業所住所（市区町村）", "事業所住所(市区町村)", target_col])
         address_detail = safe_get(row, ["事業所住所（番地以降）", "事業所住所(番地以降)"])
-        # 👑 【アドオン】番地情報の信頼性チェック（汎用版）
-        # 数字を含まない、または極端に短い（2文字以下）場合は、無効な番地データとみなす。
+        
         if not re.search(r'[0-9０-９]', address_detail) or len(address_detail) <= 2:
             address_detail = ""
         address = city + address_detail
         
         raw_tel = safe_get(row, ["事業所電話番号", "事業所連絡先", "電話番号"])
-        
-        # 👑 【アドオン】電話番号クレンジング（発信できないバグ対策）
-        # 全角数字を半角に直し、数字とハイフン以外（不要な空白など）を削除
         tel_clean = re.sub(r'[^0-9\-]', '', raw_tel.translate(str.maketrans('０１２３４５６７８９', '0123456789')))
 
         raw_lat = safe_get(row, ["事業所緯度", "緯度"])
@@ -141,9 +137,7 @@ def run_build():
         if lat is None or lon is None:
             is_approximate = True
             detected_city = None
-            # 👑 【アドオン】市区町村の誤判定防止（前方一致等の厳密判定）
             for key in MUNICIPAL_COORDS.keys():
-                # "大阪府東大阪市..." の中から "東大阪市" などを正確に探す
                 if key in city and (city.index(key) == 3 or city.index(key) == 0):
                     detected_city = key
                     break
@@ -158,8 +152,8 @@ def run_build():
         facilities.append({
             "name": name,
             "address": address,
-            "tel": raw_tel,        # 画面表示用（そのまま）
-            "tel_clean": tel_clean, # 👑 リンク（発信）用
+            "tel": raw_tel,        
+            "tel_clean": tel_clean, 
             "lat": round(lat, 6),
             "lon": round(lon, 6),
             "is_approximate": is_approximate
