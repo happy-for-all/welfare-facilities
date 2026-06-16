@@ -10,7 +10,7 @@ import math
 import shutil  # 👑 OSに依存せず安全にファイルをコピーするため
 
 # ==========================================
-# 👑 福祉ポータル: ローカルZIP超高速ビルドエンジン (Ver 1.4.7 共同生活援助・鉄壁版)
+# 👑 福祉ポータル: ローカルZIP超高速ビルドエンジン (Ver 1.4.8 共同生活援助・真の鉄壁版)
 # 開発者: ちゃろ ＆ AIバディ
 # 理念：HFA（Happy for All）
 # ==========================================
@@ -159,7 +159,7 @@ def extract_clean_url(raw_text):
 
 def run_build():
     print("==========================================")
-    print(f"🌸 福祉ポータルデータビルド: 【大阪府・{TARGET_SERVICE_NAME}】")
+    print(f"🌸 福祉ポータルデータビルド: 【関東・関西版・{TARGET_SERVICE_NAME}】")
     print("==========================================")
 
     if not os.path.exists(LOCAL_ZIP):
@@ -202,16 +202,22 @@ def run_build():
 
     df.columns = df.columns.str.strip().str.replace('\n', '').str.replace('\r', '')
 
-    # 👑 【修正】列名の全角/半角・改行・スペース混在に対応した柔軟な列名検出
-    col_address_city = [col for col in df.columns if "住所" in col and "市区町村" in col]
-    if not col_address_city:
+    # 👑 【バグ修正】必ず「事業所の住所」をターゲットに固定する（法人住所バグの排除）
+    target_col = "事業所住所（市区町村）"
+    if target_col not in df.columns and "事業所住所(市区町村)" in df.columns:
+        target_col = "事業所住所(市区町村)"
+    
+    if target_col not in df.columns:
         print("❌ [致命的エラー] 事業所住所（市区町村）列が見つかりません。")
         sys.exit(1)
-    target_col = col_address_city[0]
 
-    # 👑 【拡張】関東・関西の全13都府県を抽出対象にする
-    target_prefectures = "東京都|神奈川県|埼玉県|千葉県|茨城県|栃木県|群馬県|大阪府|京都府|兵庫県|奈良県|和歌山県|滋賀県"
-    df_filtered = df[df[target_col].astype(str).str.contains(target_prefectures, na=False)].copy()
+    # 👑 【関東・関西 限定フィルター】
+    # 対象となる13都府県（関東・関西）のいずれかで始まる事業所だけを厳密に抽出します。
+    target_prefectures = (
+        "東京都", "神奈川県", "埼玉県", "千葉県", "茨城県", "栃木県", "群馬県",
+        "大阪府", "京都府", "兵庫県", "奈良県", "和歌山県", "滋賀県"
+    )
+    df_filtered = df[df[target_col].astype(str).str.startswith(target_prefectures, na=False)].copy()
     print(f"📊 抽出結果: {len(df_filtered)} 件の事業所（関東・関西）が見つかりました。")
 
     facilities = []
@@ -226,6 +232,18 @@ def run_build():
         if not re.search(r'[0-9０-９]', address_detail) or len(address_detail) <= 2:
             address_detail = ""
         address = city + address_detail
+        
+        # 👑 【最強アドオン】関東・関西以外の「対象外エリア除外」フィルター
+        # 実際の事業所住所に、対象外の都道府県名が含まれていたら強制的に捨てる（名寄せバグ排除）
+        exclude_keywords = [
+            "北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県",
+            "新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県", "岐阜県", "静岡県", "愛知県",
+            "三重県", "鳥取県", "島根県", "岡山県", "広島県", "山口県",
+            "徳島県", "香川県", "愛媛県", "高知県",
+            "福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"
+        ]
+        if any(ex_kw in address for ex_kw in exclude_keywords):
+            continue
         
         raw_tel = safe_get(row, ["事業所電話番号", "事業所連絡先", "電話番号"])
         tel_clean = re.sub(r'[^0-9\-]', '', raw_tel.translate(str.maketrans('０１２３４５６７８９', '0123456789')))
@@ -277,13 +295,13 @@ def run_build():
 
         facilities.append({
             "name": name,
-            "name_kana": name_kana, # 👑 ひらがな検索用データを追加
+            "name_kana": name_kana,
             "address": address,
             "tel": raw_tel,        
             "tel_clean": tel_clean, 
             "lat": round(lat, 6),
             "lon": round(lon, 6),
-            "url": clean_url, # 👑 クリーンなホームページURLを保存
+            "url": clean_url,
             "is_approximate": is_approximate
         })
 
@@ -295,7 +313,6 @@ def run_build():
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(facilities, f, ensure_ascii=False, indent=2)
         
-    # 👑 【改善】環境に依存せず、常に安全にファイルをコピーする
     shutil.copy2("index.html", os.path.join(target_dir, "index.html"))
     print(f"🎉 [ビルド大成功] '{output_path}' が完成しました！")
 
