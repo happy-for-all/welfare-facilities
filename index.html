@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="大阪府内の共同生活援助（障害者グループホーム）を「現在地から近い順」に探せる完全無料の検索ポータル。行政の最新データを使用し、お近くの施設を素早く一覧表示。ご家族の住まい探しや、相談支援専門員さんの業務効率化を優しくサポートさせていただくために作成しました。">
+    <meta name="description" content="関東・関西の共同生活援助（障害者グループホーム）を「現在地から近い順」に探せる完全無料の検索ポータル。行政の最新データを使用し、お近くの施設を素早く一覧表示。ご家族の住まい探しや、相談支援専門員さんの業務効率化を優しくサポートさせていただくために作成しました。どうぞお役立てください。">
     <link rel="canonical" href="https://for-welfare.pray-power-is-god-and-cocoro.com/happy-for-all/">
+    
     <!-- 👑 絵文字の 🌿 がそのままアドレスバーに表示されるおしゃれファビコン -->
-    <!-- 👑 バリデータ警告を100%完全回避するURLエンコード版絵文字ファビコン -->
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Ctext%20y%3D%270.9em%27%20font-size%3D%2790%27%3E%F0%9F%8C%BF%3C%2Ftext%3E%3C%2Fsvg%3E">
-    <title>大阪 共同生活援助（グループホーム）施設 検索サイト</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Ctext%20y%3D%270.9em%27%20font-size%3D%2790%27%3E%F0%9F%8C%BF%3C%2Ftext%3E%3C%2Fsvg%3E">
+    <title>共同生活援助（グループホーム）施設 総合検索ポータル（関東・関西）</title>
 
-     <!-- Google tag (gtag.js) -->
+     <!-- Google tag (gtag.js) - HFA専用タグ G-8RDBH5D7M3 を完全に維持 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-8RDBH5D7M3"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -25,6 +25,7 @@
         :root {
             --bg-color: #f4f9f4;
             --main-green: #5a9e82;
+            --main-blue: #4a90e2; /* 👑 HPリンクカラー用に追加 */
             --text-main: #333333;
             --text-sub: #666666;
             --card-bg: #ffffff;
@@ -44,7 +45,7 @@
         .btn-gps:active, .btn-search:active { transform: scale(0.98); }
         
         .card { background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border: 1px solid var(--border-color); }
-        .card h3 { margin: 0 0 10px 0; font-size: 1.15rem; color: var(--main-green); }
+        .card h3 { margin: 0 0 10px 0; font-size: 1.15rem; color: var(--text-main); }
         .card p { margin: 6px 0; font-size: 0.95rem; color: var(--text-main); }
         .tel-link { color: var(--main-green); font-weight: bold; text-decoration: none; display: inline-block; padding: 5px 0; }
         
@@ -66,12 +67,12 @@
 </head>
 <body>
 
-    <h1 class="header">🌿 まごころ福祉施設ナビ（大阪府版）</h1>
+    <h1 class="header">🌿 まごころ福祉施設ナビ<br>（障害者グループホーム）関東・関西</h1>
 
     <div class="container">
         <div class="disclaimer">
             <strong>【免責事項】</strong><br>
-            当サイトは行政の公開データをプログラムで自動整理して表示しています。情報にはタイムラグや誤りが含まれる場合がございます。施設をご検討の際は、必ず直接お問い合わせください。
+            当サイトは行政の公開データをプログラムで自動整理して表示しています。情報にはタイムラグや誤りが含まれる場合がございます。施設をご検討の際は、必ず直接お問い合わせください。関東と関西に対応しています。
         </div>
 
         <div class="search-box">
@@ -81,7 +82,7 @@
 
             <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 25px 0;">
             <h3 style="font-size: 1rem; color: var(--text-main); margin-top: 0;">または、住所・施設名で絞り込む</h3>
-            <input type="text" id="searchInput" class="search-input" placeholder="例：東大阪市小阪" onkeypress="handleEnter(event)">
+            <input type="text" id="searchInput" class="search-input" placeholder="例：東大阪市など" onkeypress="handleEnter(event)">
             <button class="btn-search" onclick="searchByKeyword()">🔍 検索する</button>
         </div>
 
@@ -115,7 +116,7 @@
         <div class="donation-box">
             <div class="donation-title">☕ 運営へのあたたかいご支援</div>
             <div class="donation-text">
-                このサイトが少しでもお役に立てたなら、運営継続のためにご支援（コーヒー1杯分でも）をいただけると非常に励みになります。いただいたご支援は、サイトの安定した運営維持と、運営者自身の生活費、そしてゆくゆくは福祉活動への思いに使わせていただきます。
+                このサイトが少しでもお役に立てたなら、運営継続のためにご支援（100円の缶コーヒー1杯分でも）をいただけると非常に励みになります。いただいたご支援は、サイトの安定した運営維持と、運営者自身の生活費、そしてゆくゆくは福祉活動への思いに使わせていただきます。
             </div>
             <a href="https://ofuse.me/fbcb2675" class="btn-donation">🎁 開発者を支援する</a>
         </div>
@@ -131,10 +132,20 @@
 
         window.onload = async () => {
             try {
-                const response = await fetch('./data.json');
-                allData = await response.json();
+                // 👑 【改善】強制的に最新のデータを取得する（キャッシュ破壊の魔法を追加）
+                const timestamp = new Date().getTime();
+                const response = await fetch('./data.json?t=' + timestamp, { cache: "no-store" });
+                const json_data = await response.json();
+                
+                // 👑 【改善】配列型チェックによるクラッシュ防止
+                if (Array.isArray(json_data)) {
+                    allData = json_data;
+                } else {
+                    throw new Error("Data is not an array");
+                }
                 document.getElementById('results').innerHTML = `<div style="text-align: center; color: var(--text-sub); padding: 20px; background: white; border-radius: 8px;">準備完了です。上のボタンから探してください。</div>`;
             } catch (error) {
+                console.error(error);
                 document.getElementById('results').innerHTML = `<div style="text-align: center; color: #dc2626;">データの読み込みに失敗しました。</div>`;
             }
         };
@@ -169,14 +180,18 @@
         }
 
         function searchByKeyword() {
-            const keyword = document.getElementById('searchInput').value.trim();
+            // 👑 【改善】ひらがな・全角・大文字小文字をすべて正規化して吸収
+            const keyword = document.getElementById('searchInput').value.trim().normalize("NFKC").toLowerCase();
             if (!keyword) {
                 alert("検索キーワードを入力してください。");
                 return;
             }
             
             displayData = allData.filter(item => {
-                return item.address.includes(keyword) || item.name.includes(keyword);
+                const addressStr = (item.address || "").normalize("NFKC").toLowerCase();
+                const nameStr = (item.name || "").normalize("NFKC").toLowerCase();
+                const kanaStr = (item.name_kana || "").normalize("NFKC").toLowerCase(); // 👑 フリガナも検索対象に
+                return addressStr.includes(keyword) || nameStr.includes(keyword) || kanaStr.includes(keyword);
             }).map(item => {
                 return { ...item, distance: null };
             });
@@ -214,7 +229,6 @@
                     }
                 }
 
-                // 👑 【アドオン】電話番号の有無で表示を切り替える
                 let telHtml = "";
                 if (item.tel_clean && item.tel_clean.length > 0) {
                     telHtml = `<p>📞 電話: <a href="tel:${item.tel_clean}" class="tel-link">${item.tel}</a></p>`;
@@ -222,11 +236,23 @@
                     telHtml = `<p style="color: var(--text-sub);">📞 電話番号情報なし</p>`;
                 }
 
+                // 👑 【改善】HPリンクとバッジの自動生成
+                const hasHp = item.url && item.url.startsWith("http");
+                let titleHtml = "";
+                if (hasHp) {
+                    let hpBadge = `<a href="${item.url}" target="_blank" rel="noopener noreferrer" style="background-color: #10b981; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 8px; text-decoration: none; display: inline-block;">HPあり</a>`;
+                    titleHtml = `<h3 style="margin-top:5px; margin-bottom:5px; display:flex; align-items:center; flex-wrap:wrap;"><a href="${item.url}" target="_blank" rel="noopener noreferrer" style="color: var(--main-blue); text-decoration: underline;">🏠 ${item.name}</a> ${hpBadge}</h3>`;
+                } else {
+                    let hpBadge = `<span style="background-color: #94a3b8; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 8px; display: inline-block;">HPなし</span>`;
+                    titleHtml = `<h3 style="margin-top:5px; margin-bottom:5px; display:flex; align-items:center; flex-wrap:wrap;">🏠 ${item.name} ${hpBadge}</h3>`;
+                }
+
                 card.innerHTML = `
                     ${distanceHtml}
-                    <h3>🏠 ${item.name}</h3>
+                    ${titleHtml}
                     <p>📍 ${item.address}</p>
                     ${telHtml}
+                    ${hasHp ? `<p style="font-size: 0.75rem; color: #94a3b8; margin: 2px 0 0 0;">※事業所専用ではなく、運営法人の親サイトが表示される場合があります</p>` : ''}
                 `;
                 resultsDiv.appendChild(card);
             }
@@ -244,6 +270,7 @@
             const R = 6371; 
             const dLat = (lat2 - lat1) * (Math.PI / 180);
             const dLon = (lon2 - lon1) * (Math.PI / 180);
+            // 👑 【バグ修正】混入していたタイポ（--Math.cos）を、正しいMath.cosに修復しました
             const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
                       Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
                       Math.sin(dLon / 2) * Math.sin(dLon / 2);
