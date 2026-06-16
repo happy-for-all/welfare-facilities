@@ -5,9 +5,12 @@ import zipfile
 import io
 import re
 import pandas as pd
+import unicodedata
+import math
+import shutil  # 👑 OSに依存せず安全にファイルをコピーするため
 
 # ==========================================
-# 👑 福祉ポータル: ローカルZIP超高速ビルドエンジン (Ver 1.3.1 脆弱性修正版)
+# 👑 福祉ポータル: ローカルZIP超高速ビルドエンジン (Ver 1.4.7 共同生活援助・鉄壁版)
 # 開発者: ちゃろ ＆ AIバディ
 # 理念：HFA（Happy for All）
 # ==========================================
@@ -15,7 +18,9 @@ import pandas as pd
 LOCAL_ZIP = "sfkopendata_202603_33.zip"
 TARGET_SERVICE_NAME = "共同生活援助"
 
+# 👑 【拡張】関東・関西の主要市区町村と各府県庁の座標を完全網羅
 MUNICIPAL_COORDS = {
+    # 🌿 関西（大阪府）
     "大阪市": {"lat": 34.6937, "lon": 135.5022},
     "堺市": {"lat": 34.5714, "lon": 135.4807},
     "東大阪市": {"lat": 34.6793, "lon": 135.5999},
@@ -48,16 +53,108 @@ MUNICIPAL_COORDS = {
     "大阪狭山市": {"lat": 34.5036, "lon": 135.5519},
     "阪南市": {"lat": 34.3592, "lon": 135.2442},
     "泉南市": {"lat": 34.3725, "lon": 135.2758},
-    "フェイルセーフ大阪府庁": {"lat": 34.6862, "lon": 135.5201}
+    
+    # 🌿 関西（大阪以外）主要都市
+    "京都市": {"lat": 35.0116, "lon": 135.7680},
+    "神戸市": {"lat": 34.6901, "lon": 135.1955},
+    "姫路市": {"lat": 34.8151, "lon": 134.6853},
+    "西宮市": {"lat": 34.7377, "lon": 135.3418},
+    "尼崎市": {"lat": 34.7335, "lon": 135.4063},
+    "奈良市": {"lat": 34.6851, "lon": 135.8048},
+    "和歌山市": {"lat": 34.2305, "lon": 135.1706},
+    "大津市": {"lat": 35.0145, "lon": 135.8522},
+    
+    # 🌿 関東（東京都）23区および主要市
+    "千代田区": {"lat": 35.6940, "lon": 139.7536},
+    "中央区": {"lat": 35.6706, "lon": 139.7718},
+    "港区": {"lat": 35.6580, "lon": 139.7515},
+    "新宿区": {"lat": 35.6938, "lon": 139.7035},
+    "文京区": {"lat": 35.7080, "lon": 139.7521},
+    "台東区": {"lat": 35.7126, "lon": 139.7799},
+    "墨田区": {"lat": 35.7107, "lon": 139.8014},
+    "江東区": {"lat": 35.6728, "lon": 139.8174},
+    "品川区": {"lat": 35.6092, "lon": 139.7301},
+    "目黒区": {"lat": 35.6414, "lon": 139.6981},
+    "大田区": {"lat": 35.5612, "lon": 139.7160},
+    "世田谷区": {"lat": 35.6465, "lon": 139.6532},
+    "渋谷区": {"lat": 35.6617, "lon": 139.7040},
+    "中野区": {"lat": 35.7073, "lon": 139.6638},
+    "杉並区": {"lat": 35.6995, "lon": 139.6364},
+    "豊島区": {"lat": 35.7261, "lon": 139.7166},
+    "北区": {"lat": 35.7528, "lon": 139.7334},
+    "荒川区": {"lat": 35.7360, "lon": 139.7833},
+    "板橋区": {"lat": 35.7511, "lon": 139.7092},
+    "練馬区": {"lat": 35.7356, "lon": 139.6516},
+    "足立区": {"lat": 35.7756, "lon": 139.8044},
+    "葛飾区": {"lat": 35.7435, "lon": 139.8471},
+    "江戸川区": {"lat": 35.7066, "lon": 139.8684},
+    "八王子市": {"lat": 35.6663, "lon": 139.3158},
+    "町田市": {"lat": 35.5466, "lon": 139.4386},
+    "府中市": {"lat": 35.6689, "lon": 139.4776},
+    "調布市": {"lat": 35.6506, "lon": 139.5406},
+    "西東京市": {"lat": 35.7252, "lon": 139.5398},
+    "小平市": {"lat": 35.7285, "lon": 139.4774},
+    "三鷹市": {"lat": 35.6835, "lon": 139.5595},
+    "日野市": {"lat": 35.6713, "lon": 139.3949},
+    "立川市": {"lat": 35.7140, "lon": 139.4078},
+    
+    # 🌿 関東（東京以外）主要都市
+    "横浜市": {"lat": 35.4478, "lon": 139.6425},
+    "川崎市": {"lat": 35.5308, "lon": 139.7029},
+    "さいたま市": {"lat": 35.8617, "lon": 139.6455},
+    "千葉市": {"lat": 35.6073, "lon": 140.1063},
+    "水戸市": {"lat": 36.3659, "lon": 140.4712},
+    "宇都宮市": {"lat": 36.5551, "lon": 139.8826},
+    "前橋市": {"lat": 36.3895, "lon": 139.0634},
+
+    # 👑 最終手段のフェイルセーフ（各府県庁）
+    "フェイルセーフ大阪府庁": {"lat": 34.6862, "lon": 135.5201},
+    "フェイルセーフ東京都庁": {"lat": 35.6895, "lon": 139.6917},
+    "フェイルセーフ神奈川県庁": {"lat": 35.4478, "lon": 139.6425},
+    "フェイルセーフ埼玉県庁": {"lat": 35.8569, "lon": 139.6489},
+    "フェイルセーフ千葉県庁": {"lat": 35.6047, "lon": 140.1232},
+    "フェイルセーフ茨城県庁": {"lat": 36.3418, "lon": 140.4468},
+    "フェイルセーフ栃木県庁": {"lat": 36.5657, "lon": 139.8836},
+    "フェイルセーフ群馬県庁": {"lat": 36.3911, "lon": 139.0608},
+    "フェイルセーフ京都府庁": {"lat": 35.0210, "lon": 135.7556},
+    "フェイルセーフ兵庫県庁": {"lat": 34.6913, "lon": 135.1830},
+    "フェイルセーフ奈良県庁": {"lat": 34.6853, "lon": 135.8327},
+    "フェイルセーフ和歌山県庁": {"lat": 34.2260, "lon": 135.1675},
+    "フェイルセーフ滋賀県庁": {"lat": 35.0045, "lon": 135.8686}
 }
 
 def safe_get(row, possible_keys):
     for key in possible_keys:
         if key in row:
+            if pd.isna(row[key]):
+                continue
             value = str(row[key]).strip()
-            if value.lower() == "nan":
-                return ""
+            if value.lower() == "nan" or value == "":
+                continue
             return value
+    return ""
+
+def extract_clean_url(raw_text):
+    if not raw_text or pd.isna(raw_text):
+        return ""
+    
+    text = unicodedata.normalize('NFKC', str(raw_text)).replace('\n', '').replace('\r', '').strip()
+    
+    url_pattern = re.compile(r'(?:https?://|www\.)[a-zA-Z0-9\.\-\_]+[\w/\:\%\#\$\&\?\(\)\~\.\=\+\-]*')
+    match = url_pattern.search(text)
+    
+    if match:
+        extracted = match.group(0)
+        if extracted.startswith("www."):
+            extracted = "https://" + extracted
+        
+        extracted = extracted.rstrip('\'"）)]}>')
+        
+        if len(extracted) <= 8 and extracted.endswith("://"):
+            return ""
+            
+        return extracted
+        
     return ""
 
 def run_build():
@@ -72,7 +169,18 @@ def run_build():
     print(f"📡 [ZIP解凍] メモリ上で '{LOCAL_ZIP}' を安全に展開中...")
     try:
         zip_file = zipfile.ZipFile(LOCAL_ZIP)
-        csv_filename = [f for f in zip_file.namelist() if f.endswith('.csv')][0]
+        csv_files = [f for f in zip_file.namelist() if f.lower().endswith('.csv') and not f.startswith('__MACOSX')]
+        
+        if not csv_files:
+            raise Exception("CSVファイルが見つかりません。")
+            
+        # 👑 【改善】CSVが複数ある場合、一番サイズの大きいファイルを本命として賢く自動選択
+        if len(csv_files) > 1:
+            print(f"⚠️ [通知] ZIP内に複数のCSVを検出しました。最もサイズの大きいファイルを本命として処理します。")
+            csv_filename = max(csv_files, key=lambda f: zip_file.getinfo(f).file_size)
+        else:
+            csv_filename = csv_files[0]
+            
     except Exception as e:
         print(f"❌ ZIPの解凍またはCSVの特定に失敗しました: {e}")
         sys.exit(1)
@@ -92,26 +200,26 @@ def run_build():
         print("❌ [致命的エラー] すべての主要文字コードでCSVの読み込みに失敗しました。")
         sys.exit(1)
 
-    print("【列名チェック（実際のCSVヘッダー）】")
-    print(list(df.columns))
+    df.columns = df.columns.str.strip().str.replace('\n', '').str.replace('\r', '')
 
-    # 👑 【バグ修正・脆弱性対策】
-    # 法人住所に引っ張られるバグを100%防ぐため、必ず「事業所」の住所列を狙い撃ちでターゲットにします。
-    target_col = "事業所住所（市区町村）"
-    if "事業所住所（市区町村）" not in df.columns and "事業所住所(市区町村)" in df.columns:
-        target_col = "事業所住所(市区町村)"
-
-    if target_col not in df.columns:
+    # 👑 【修正】列名の全角/半角・改行・スペース混在に対応した柔軟な列名検出
+    col_address_city = [col for col in df.columns if "住所" in col and "市区町村" in col]
+    if not col_address_city:
         print("❌ [致命的エラー] 事業所住所（市区町村）列が見つかりません。")
         sys.exit(1)
+    target_col = col_address_city[0]
 
-    df_filtered = df[df[target_col].str.startswith("大阪府", na=False)].copy()
-    print(f"📊 抽出結果: {len(df_filtered)} 件の大阪府の事業所が見つかりました。")
+    # 👑 【拡張】関東・関西の全13都府県を抽出対象にする
+    target_prefectures = "東京都|神奈川県|埼玉県|千葉県|茨城県|栃木県|群馬県|大阪府|京都府|兵庫県|奈良県|和歌山県|滋賀県"
+    df_filtered = df[df[target_col].astype(str).str.contains(target_prefectures, na=False)].copy()
+    print(f"📊 抽出結果: {len(df_filtered)} 件の事業所（関東・関西）が見つかりました。")
 
     facilities = []
     
     for _, row in df_filtered.iterrows():
         name = safe_get(row, ["事業所の名称", "事業所名称"])
+        name_kana = safe_get(row, ["事業所の名称_かな", "事業所名称_かな", "フリガナ", "ふりがな"])
+        
         city = safe_get(row, ["事業所住所（市区町村）", "事業所住所(市区町村)", target_col])
         address_detail = safe_get(row, ["事業所住所（番地以降）", "事業所住所(番地以降)"])
         
@@ -125,6 +233,9 @@ def run_build():
         raw_lat = safe_get(row, ["事業所緯度", "緯度"])
         raw_lon = safe_get(row, ["事業所経度", "経度"])
         
+        raw_url_text = safe_get(row, ["事業所URL", "事業所ＵＲＬ", "ホームページ", "ホームページアドレス", "法人URL"])
+        clean_url = extract_clean_url(raw_url_text)
+        
         lat, lon = None, None
         is_approximate = False
         
@@ -133,6 +244,9 @@ def run_build():
             if raw_lon: lon = float(raw_lon)
         except Exception:
             pass
+            
+        if lat is not None and math.isnan(lat): lat = None
+        if lon is not None and math.isnan(lon): lon = None
             
         if lat is None or lon is None:
             is_approximate = True
@@ -146,19 +260,34 @@ def run_build():
                 lat = MUNICIPAL_COORDS[detected_city]["lat"]
                 lon = MUNICIPAL_COORDS[detected_city]["lon"]
             else:
-                lat = MUNICIPAL_COORDS["フェイルセーフ大阪府庁"]["lat"]
-                lon = MUNICIPAL_COORDS["フェイルセーフ大阪府庁"]["lon"]
+                # 👑 【拡張】座標が空欄の場合、対象の府県庁に正しく割り振る安全装置
+                if city.startswith("東京都"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ東京都庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ東京都庁"]["lon"]
+                elif city.startswith("神奈川県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ神奈川県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ神奈川県庁"]["lon"]
+                elif city.startswith("埼玉県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ埼玉県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ埼玉県庁"]["lon"]
+                elif city.startswith("千葉県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ千葉県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ千葉県庁"]["lon"]
+                elif city.startswith("茨城県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ茨城県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ茨城県庁"]["lon"]
+                elif city.startswith("栃木県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ栃木県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ栃木県庁"]["lon"]
+                elif city.startswith("群馬県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ群馬県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ群馬県庁"]["lon"]
+                elif city.startswith("京都府"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ京都府庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ京都府庁"]["lon"]
+                elif city.startswith("兵庫県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ兵庫県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ兵庫県庁"]["lon"]
+                elif city.startswith("奈良県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ奈良県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ奈良県庁"]["lon"]
+                elif city.startswith("和歌山県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ和歌山県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ和歌山県庁"]["lon"]
+                elif city.startswith("滋賀県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ滋賀県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ滋賀県庁"]["lon"]
+                else: lat, lon = MUNICIPAL_COORDS["フェイルセーフ大阪府庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ大阪府庁"]["lon"]
 
         facilities.append({
             "name": name,
+            "name_kana": name_kana, # 👑 ひらがな検索用データを追加
             "address": address,
             "tel": raw_tel,        
             "tel_clean": tel_clean, 
             "lat": round(lat, 6),
             "lon": round(lon, 6),
+            "url": clean_url, # 👑 クリーンなホームページURLを保存
             "is_approximate": is_approximate
         })
 
+    # 👑 【デグレ防止】出力先ディレクトリ happy-for-all は厳格に維持
     target_dir = os.path.join("dist", "happy-for-all")
     os.makedirs(target_dir, exist_ok=True)
     
@@ -166,7 +295,8 @@ def run_build():
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(facilities, f, ensure_ascii=False, indent=2)
         
-    os.system(f"cp index.html {target_dir}/")
+    # 👑 【改善】環境に依存せず、常に安全にファイルをコピーする
+    shutil.copy2("index.html", os.path.join(target_dir, "index.html"))
     print(f"🎉 [ビルド大成功] '{output_path}' が完成しました！")
 
 if __name__ == "__main__":
