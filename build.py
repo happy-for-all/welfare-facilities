@@ -226,11 +226,11 @@ def run_build():
     df.columns = df.columns.str.strip().str.replace('\n', '').str.replace('\r', '')
 
     # 👑 【最強アドオン】法人住所を絶対に拾わず、表記揺れにも完璧に対応する列検出
-        col_address_city = [col for col in df.columns if "事業所" in col and "住所" in col and "市区町村" in col]
-        if not col_address_city:
-            print(f"❌ 事業所住所（市区町村）列が見つかりません ({service_name})。スキップします。")
-            continue
-        target_col = col_address_city[0]
+    col_address_city = [col for col in df.columns if "事業所" in col and "住所" in col and "市区町村" in col]
+    if not col_address_city:
+        print(f"❌ 事業所住所（市区町村）列が見つかりません ({service_name})。スキップします。")
+        continue
+    target_col = col_address_city[0]
 
     # 👑 【重大バグ修正】たによん問題解決。strip()を挟んで空白を消してから判定する
     target_prefectures = (
