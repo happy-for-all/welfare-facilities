@@ -324,6 +324,7 @@ def run_build():
             "name": name,
             "name_kana": name_kana,
             "address": address,
+            "map_address": extract_map_address(address), # 👑 【追加】地図用の短縮住所
             "tel": raw_tel,        
             "tel_clean": tel_clean, 
             "lat": round(lat, 6),
