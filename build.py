@@ -10,7 +10,7 @@ import math
 import shutil  # 👑 OSに依存せず安全にファイルをコピーするため
 
 # ==========================================
-# 👑 福祉ポータル: ローカルZIP超高速ビルドエンジン (Ver 1.4.8 共同生活援助・真の鉄壁版)
+# 👑 福祉ポータル: ローカルZIP超高速ビルドエンジン (Ver 1.4.9 共同生活援助・真の完全版)
 # 開発者: ちゃろ ＆ AIバディ
 # 理念：HFA（Happy for All）
 # ==========================================
@@ -174,7 +174,6 @@ def run_build():
         if not csv_files:
             raise Exception("CSVファイルが見つかりません。")
             
-        # 👑 【改善】CSVが複数ある場合、一番サイズの大きいファイルを本命として賢く自動選択
         if len(csv_files) > 1:
             print(f"⚠️ [通知] ZIP内に複数のCSVを検出しました。最もサイズの大きいファイルを本命として処理します。")
             csv_filename = max(csv_files, key=lambda f: zip_file.getinfo(f).file_size)
@@ -202,7 +201,6 @@ def run_build():
 
     df.columns = df.columns.str.strip().str.replace('\n', '').str.replace('\r', '')
 
-    # 👑 【バグ修正】必ず「事業所の住所」をターゲットに固定する（法人住所バグの排除）
     target_col = "事業所住所（市区町村）"
     if target_col not in df.columns and "事業所住所(市区町村)" in df.columns:
         target_col = "事業所住所(市区町村)"
@@ -211,13 +209,12 @@ def run_build():
         print("❌ [致命的エラー] 事業所住所（市区町村）列が見つかりません。")
         sys.exit(1)
 
-    # 👑 【関東・関西 限定フィルター】
-    # 対象となる13都府県（関東・関西）のいずれかで始まる事業所だけを厳密に抽出します。
+    # 👑 【重大バグ修正】たによん問題解決。strip()を挟んで空白を消してから判定する
     target_prefectures = (
         "東京都", "神奈川県", "埼玉県", "千葉県", "茨城県", "栃木県", "群馬県",
         "大阪府", "京都府", "兵庫県", "奈良県", "和歌山県", "滋賀県"
     )
-    df_filtered = df[df[target_col].astype(str).str.startswith(target_prefectures, na=False)].copy()
+    df_filtered = df[df[target_col].astype(str).str.strip().str.startswith(target_prefectures, na=False)].copy()
     print(f"📊 抽出結果: {len(df_filtered)} 件の事業所（関東・関西）が見つかりました。")
 
     facilities = []
@@ -233,8 +230,6 @@ def run_build():
             address_detail = ""
         address = city + address_detail
         
-        # 👑 【最強アドオン】関東・関西以外の「対象外エリア除外」フィルター
-        # 実際の事業所住所に、対象外の都道府県名が含まれていたら強制的に捨てる（名寄せバグ排除）
         exclude_keywords = [
             "北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県",
             "新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県", "岐阜県", "静岡県", "愛知県",
@@ -268,9 +263,17 @@ def run_build():
             
         if lat is None or lon is None:
             is_approximate = True
+            
+            # 👑 【重大バグ修正】4文字県（神奈川県、和歌山県など）を正確に判定するロジック
+            matched_pref_len = 0
+            for pref in target_prefectures:
+                if city.startswith(pref):
+                    matched_pref_len = len(pref)
+                    break
+                    
             detected_city = None
             for key in MUNICIPAL_COORDS.keys():
-                if key in city and (city.index(key) == 3 or city.index(key) == 0):
+                if key in city and (city.index(key) == matched_pref_len or city.index(key) == 0):
                     detected_city = key
                     break
             
@@ -278,7 +281,6 @@ def run_build():
                 lat = MUNICIPAL_COORDS[detected_city]["lat"]
                 lon = MUNICIPAL_COORDS[detected_city]["lon"]
             else:
-                # 👑 【拡張】座標が空欄の場合、対象の府県庁に正しく割り振る安全装置
                 if city.startswith("東京都"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ東京都庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ東京都庁"]["lon"]
                 elif city.startswith("神奈川県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ神奈川県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ神奈川県庁"]["lon"]
                 elif city.startswith("埼玉県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ埼玉県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ埼玉県庁"]["lon"]
@@ -305,7 +307,6 @@ def run_build():
             "is_approximate": is_approximate
         })
 
-    # 👑 【デグレ防止】出力先ディレクトリ happy-for-all は厳格に維持
     target_dir = os.path.join("dist", "happy-for-all")
     os.makedirs(target_dir, exist_ok=True)
     
