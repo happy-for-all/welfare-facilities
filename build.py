@@ -229,7 +229,7 @@ def run_build():
     col_address_city = [col for col in df.columns if "事業所" in col and "住所" in col and "市区町村" in col]
     if not col_address_city:
         print(f"❌ 事業所住所（市区町村）列が見つかりません ({service_name})。スキップします。")
-        continue
+        sys.exit(1)
     target_col = col_address_city[0]
 
     # 👑 【重大バグ修正】たによん問題解決。strip()を挟んで空白を消してから判定する
