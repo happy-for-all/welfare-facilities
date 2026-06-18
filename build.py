@@ -342,6 +342,7 @@ def run_build():
         facilities.append({
             "name": name,
             "name_kana": name_kana,
+            "service_type": TARGET_SERVICE_NAME,
             "address": address,
             "map_address": extract_map_address(address),
             "tel": raw_tel,        
