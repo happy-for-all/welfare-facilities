@@ -10,7 +10,7 @@ import math
 import shutil
 
 # ==========================================
-# 👑 福祉ポータル: ローカルZIP超高速ビルドエンジン (Ver 1.5 共同生活援助・完全統合版)
+# 👑 福祉ポータル: ローカルZIP超高速ビルドエンジン (Ver 1.6 共同生活援助・全国展開アドオン版)
 # 開発者: ちゃろ ＆ AIバディ
 # 理念：HFA（Happy for All）
 # ==========================================
@@ -18,7 +18,58 @@ import shutil
 LOCAL_ZIP = "sfkopendata_202603_33.zip"
 TARGET_SERVICE_NAME = "共同生活援助"
 
-# 👑 関東・関西の主要市区町村と各府県庁の座標を完全網羅
+# 👑 【全国展開アドオン】47都道府県：県庁座標 + ファイル名用slug
+PREFECTURE_OFFICES = {
+    "北海道": {"slug": "hokkaido", "lat": 43.0642, "lon": 141.3469},
+    "青森県": {"slug": "aomori", "lat": 40.8244, "lon": 140.7400},
+    "岩手県": {"slug": "iwate", "lat": 39.7036, "lon": 141.1527},
+    "宮城県": {"slug": "miyagi", "lat": 38.2682, "lon": 140.8721},
+    "秋田県": {"slug": "akita", "lat": 39.7186, "lon": 140.1024},
+    "山形県": {"slug": "yamagata", "lat": 38.2404, "lon": 140.3633},
+    "福島県": {"slug": "fukushima", "lat": 37.7503, "lon": 140.4676},
+    "茨城県": {"slug": "ibaraki", "lat": 36.3418, "lon": 140.4468},
+    "栃木県": {"slug": "tochigi", "lat": 36.5657, "lon": 139.8836},
+    "群馬県": {"slug": "gunma", "lat": 36.3911, "lon": 139.0608},
+    "埼玉県": {"slug": "saitama", "lat": 35.8569, "lon": 139.6489},
+    "千葉県": {"slug": "chiba", "lat": 35.6047, "lon": 140.1232},
+    "東京都": {"slug": "tokyo", "lat": 35.6895, "lon": 139.6917},
+    "神奈川県": {"slug": "kanagawa", "lat": 35.4478, "lon": 139.6425},
+    "新潟県": {"slug": "niigata", "lat": 37.9026, "lon": 139.0232},
+    "富山県": {"slug": "toyama", "lat": 36.6953, "lon": 137.2113},
+    "石川県": {"slug": "ishikawa", "lat": 36.5947, "lon": 136.6256},
+    "福井県": {"slug": "fukui", "lat": 36.0652, "lon": 136.2216},
+    "山梨県": {"slug": "yamanashi", "lat": 35.6642, "lon": 138.5685},
+    "長野県": {"slug": "nagano", "lat": 36.6513, "lon": 138.1810},
+    "岐阜県": {"slug": "gifu", "lat": 35.3912, "lon": 136.7223},
+    "静岡県": {"slug": "shizuoka", "lat": 34.9769, "lon": 138.3831},
+    "愛知県": {"slug": "aichi", "lat": 35.1802, "lon": 136.9066},
+    "三重県": {"slug": "mie", "lat": 34.7303, "lon": 136.5086},
+    "滋賀県": {"slug": "shiga", "lat": 35.0045, "lon": 135.8686},
+    "京都府": {"slug": "kyoto", "lat": 35.0210, "lon": 135.7556},
+    "大阪府": {"slug": "osaka", "lat": 34.6862, "lon": 135.5201},
+    "兵庫県": {"slug": "hyogo", "lat": 34.6913, "lon": 135.1830},
+    "奈良県": {"slug": "nara", "lat": 34.6853, "lon": 135.8327},
+    "和歌山県": {"slug": "wakayama", "lat": 34.2260, "lon": 135.1675},
+    "鳥取県": {"slug": "tottori", "lat": 35.5039, "lon": 134.2378},
+    "島根県": {"slug": "shimane", "lat": 35.4723, "lon": 133.0505},
+    "岡山県": {"slug": "okayama", "lat": 34.6618, "lon": 133.9344},
+    "広島県": {"slug": "hiroshima", "lat": 34.3966, "lon": 132.4596},
+    "山口県": {"slug": "yamaguchi", "lat": 34.1859, "lon": 131.4714},
+    "徳島県": {"slug": "tokushima", "lat": 34.0658, "lon": 134.5593},
+    "香川県": {"slug": "kagawa", "lat": 34.3401, "lon": 134.0434},
+    "愛媛県": {"slug": "ehime", "lat": 33.8417, "lon": 132.7661},
+    "高知県": {"slug": "kochi", "lat": 33.5597, "lon": 133.5311},
+    "福岡県": {"slug": "fukuoka", "lat": 33.6064, "lon": 130.4181},
+    "佐賀県": {"slug": "saga", "lat": 33.2494, "lon": 130.2988},
+    "長崎県": {"slug": "nagasaki", "lat": 32.7448, "lon": 129.8737},
+    "熊本県": {"slug": "kumamoto", "lat": 32.7898, "lon": 130.7417},
+    "大分県": {"slug": "oita", "lat": 33.2382, "lon": 131.6126},
+    "宮崎県": {"slug": "miyazaki", "lat": 31.9111, "lon": 131.4239},
+    "鹿児島県": {"slug": "kagoshima", "lat": 31.5602, "lon": 130.5581},
+    "沖縄県": {"slug": "okinawa", "lat": 26.2124, "lon": 127.6809},
+}
+
+# 👑 関東・関西の主要市区町村の座標（市区町村レベルのみ）
 MUNICIPAL_COORDS = {
     # 🌿 関西（大阪府）
     "大阪市": {"lat": 34.6937, "lon": 135.5022},
@@ -105,23 +156,15 @@ MUNICIPAL_COORDS = {
     "千葉市": {"lat": 35.6073, "lon": 140.1063},
     "水戸市": {"lat": 36.3659, "lon": 140.4712},
     "宇都宮市": {"lat": 36.5551, "lon": 139.8826},
-    "前橋市": {"lat": 36.3895, "lon": 139.0634},
-
-    # 👑 最終手段のフェイルセーフ（各府県庁）
-    "フェイルセーフ大阪府庁": {"lat": 34.6862, "lon": 135.5201},
-    "フェイルセーフ東京都庁": {"lat": 35.6895, "lon": 139.6917},
-    "フェイルセーフ神奈川県庁": {"lat": 35.4478, "lon": 139.6425},
-    "フェイルセーフ埼玉県庁": {"lat": 35.8569, "lon": 139.6489},
-    "フェイルセーフ千葉県庁": {"lat": 35.6047, "lon": 140.1232},
-    "フェイルセーフ茨城県庁": {"lat": 36.3418, "lon": 140.4468},
-    "フェイルセーフ栃木県庁": {"lat": 36.5657, "lon": 139.8836},
-    "フェイルセーフ群馬県庁": {"lat": 36.3911, "lon": 139.0608},
-    "フェイルセーフ京都府庁": {"lat": 35.0210, "lon": 135.7556},
-    "フェイルセーフ兵庫県庁": {"lat": 34.6913, "lon": 135.1830},
-    "フェイルセーフ奈良県庁": {"lat": 34.6853, "lon": 135.8327},
-    "フェイルセーフ和歌山県庁": {"lat": 34.2260, "lon": 135.1675},
-    "フェイルセーフ滋賀県庁": {"lat": 35.0045, "lon": 135.8686}
+    "前橋市": {"lat": 36.3895, "lon": 139.0634}
 }
+
+def detect_prefecture_key(text):
+    """住所文字列の先頭から都道府県名を判定する"""
+    for pref in PREFECTURE_OFFICES.keys():
+        if text.startswith(pref):
+            return pref
+    return None
 
 def safe_get(row, possible_keys):
     for key in possible_keys:
@@ -182,7 +225,7 @@ def extract_map_address(address):
 
 def run_build():
     print("==========================================")
-    print(f"🌸 福祉ポータルデータビルド: 【関東・関西版・{TARGET_SERVICE_NAME}】")
+    print(f"🌸 福祉ポータルデータビルド: 【全国展開版・{TARGET_SERVICE_NAME}】")
     print("==========================================")
 
     # 👑 【改善適用】ビルド前に dist フォルダをクリア
@@ -238,12 +281,10 @@ def run_build():
         sys.exit(1)
     target_col = col_address_city[0]
 
-    target_prefectures = (
-        "東京都", "神奈川県", "埼玉県", "千葉県", "茨城県", "栃木県", "群馬県",
-        "大阪府", "京都府", "兵庫県", "奈良県", "和歌山県", "滋賀県"
-    )
+    # 👑 【全国展開アドオン】13都府県 → 全47都道府県へ拡張
+    target_prefectures = tuple(PREFECTURE_OFFICES.keys())
     df_filtered = df[df[target_col].astype(str).str.strip().str.startswith(target_prefectures, na=False)].copy()
-    print(f"📊 抽出結果: {len(df_filtered)} 件の事業所（関東・関西）が見つかりました。")
+    print(f"📊 抽出結果: {len(df_filtered)} 件の事業所（全国）が見つかりました。")
 
     facilities = []
     
@@ -264,13 +305,9 @@ def run_build():
             
         address = city + address_detail
         
-        exclude_keywords = [
-            "北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県",
-            "新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県", "岐阜県", "静岡県", "愛知県",
-            "三重県", "鳥取県", "島根県", "岡山県", "広島県", "山口県",
-            "徳島県", "香川県", "愛媛県", "高知県",
-            "福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"
-        ]
+        # 👑 [全国展開につき無効化] target_prefecturesが47都道府県になったため、
+        # この二重除外チェックは不要。ロールバック用にコードは残し、判定だけ空にする。
+        exclude_keywords = []
         if any(ex_kw in address for ex_kw in exclude_keywords):
             continue
         
@@ -306,38 +343,25 @@ def run_build():
             
         if lat is None or lon is None:
             is_approximate = True
-            
-            matched_pref_len = 0
-            for pref in target_prefectures:
-                if city.startswith(pref):
-                    matched_pref_len = len(pref)
-                    break
-                    
+
+            detected_pref = detect_prefecture_key(city)
+            matched_pref_len = len(detected_pref) if detected_pref else 0
+
             detected_city = None
             for key in MUNICIPAL_COORDS.keys():
                 if key in city and (city.index(key) == matched_pref_len or city.index(key) == 0):
                     detected_city = key
                     break
-            
+
             if detected_city:
                 lat = MUNICIPAL_COORDS[detected_city]["lat"]
                 lon = MUNICIPAL_COORDS[detected_city]["lon"]
+            elif detected_pref:
+                lat = PREFECTURE_OFFICES[detected_pref]["lat"]
+                lon = PREFECTURE_OFFICES[detected_pref]["lon"]
             else:
-                if city.startswith("東京都"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ東京都庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ東京都庁"]["lon"]
-                elif city.startswith("神奈川県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ神奈川県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ神奈川県庁"]["lon"]
-                elif city.startswith("埼玉県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ埼玉県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ埼玉県庁"]["lon"]
-                elif city.startswith("千葉県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ千葉県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ千葉県庁"]["lon"]
-                elif city.startswith("茨城県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ茨城県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ茨城県庁"]["lon"]
-                elif city.startswith("栃木県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ栃木県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ栃木県庁"]["lon"]
-                elif city.startswith("群馬県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ群馬県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ群馬県庁"]["lon"]
-                elif city.startswith("京都府"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ京都府庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ京都府庁"]["lon"]
-                elif city.startswith("兵庫県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ兵庫県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ兵庫県庁"]["lon"]
-                elif city.startswith("奈良県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ奈良県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ奈良県庁"]["lon"]
-                elif city.startswith("和歌山県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ和歌山県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ和歌山県庁"]["lon"]
-                elif city.startswith("滋賀県"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ滋賀県庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ滋賀県庁"]["lon"]
-                # 👑 【改善適用】大阪府の明示的追加
-                elif city.startswith("大阪府"): lat, lon = MUNICIPAL_COORDS["フェイルセーフ大阪府庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ大阪府庁"]["lon"]
-                else: lat, lon = MUNICIPAL_COORDS["フェイルセーフ大阪府庁"]["lat"], MUNICIPAL_COORDS["フェイルセーフ大阪府庁"]["lon"]
+                lat = PREFECTURE_OFFICES["東京都"]["lat"]
+                lon = PREFECTURE_OFFICES["東京都"]["lon"]
 
         facilities.append({
             "name": name,
@@ -361,17 +385,31 @@ def run_build():
             "capacity": capacity
         })
 
-    # 👑 【安全策】1件も作れなかったらここで止める二段構え
+    # 👑 【安全策】1件も作れなかったらここで止める二段構え（変更なし・温存）
     if not facilities:
         print("❌ [致命的エラー] データが1件も生成されませんでした。ビルドを中断します。")
         sys.exit(1)
 
-    output_path = os.path.join(target_dir, "data.json")
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(facilities, f, ensure_ascii=False, indent=2)
-        
+    # 👑 【全国展開アドオン】都道府県ごとにファイルを分割して書き出す
+    facilities_by_pref = {}
+    for fac in facilities:
+        pref_key = detect_prefecture_key(fac["address"]) or "不明"
+        facilities_by_pref.setdefault(pref_key, []).append(fac)
+
+    manifest = {}
+    for pref_key, fac_list in facilities_by_pref.items():
+        slug = PREFECTURE_OFFICES.get(pref_key, {}).get("slug", "unknown")
+        output_path = os.path.join(target_dir, f"data_{slug}.json")
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(fac_list, f, ensure_ascii=False, indent=2)
+        manifest[slug] = len(fac_list)
+
+    manifest_path = os.path.join(target_dir, "data_manifest.json")
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, ensure_ascii=False, indent=2)
+
     shutil.copy2("index.html", os.path.join(target_dir, "index.html"))
-    print(f"🎉 [ビルド大成功] '{output_path}' が完成しました！")
+    print(f"🎉 [ビルド大成功] {len(facilities)}件 → {len(facilities_by_pref)}都道府県に分割完了しました！")
 
 if __name__ == "__main__":
     try:
